@@ -24,16 +24,6 @@
 * Run `cmake`
 * Close the cmd window
 
-## Building
-```
-git clone https://github.com/powerof3/LockVariations.git
-cd LockVariations
-# pull commonlib /extern to override the path settings
-git submodule init
-# to update submodules to checked in build
-git submodule update
-```
-
 ### SSE
 ```
 cmake --preset vs2022-windows-vcpkg-se

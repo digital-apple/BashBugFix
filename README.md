@@ -17,11 +17,32 @@
 ## User Requirements
 * [Address Library for SKSE](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
 	* Needed for SSE/AE
-
+* [VR Address Library for SKSEVR](https://www.nexusmods.com/skyrimspecialedition/mods/58101)
+	* Needed for VR
 ## Register Visual Studio as a Generator
 * Open `x64 Native Tools Command Prompt`
 * Run `cmake`
 * Close the cmd window
 
+## Building
+```
+git clone https://github.com/powerof3/LockVariations.git
+cd LockVariations
+# pull commonlib /extern to override the path settings
+git submodule init
+# to update submodules to checked in build
+git submodule update
+```
+
+### SSE
+```
+cmake --preset vs2022-windows-vcpkg
+cmake --build build --config Release
+```
+### VR
+```
+cmake --preset vs2022-windows-vcpkg-vr
+cmake --build buildvr --config Release
+```
 ## License
 [MIT](LICENSE)

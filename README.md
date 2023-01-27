@@ -1,6 +1,6 @@
 # Bash Bug Fix
 
-* [SSE/AE](https://www.nexusmods.com/skyrimspecialedition)
+* [SSE/AE](https://www.nexusmods.com/skyrimspecialedition/mods/83581)
 
 ## Requirements
 * [CMake](https://cmake.org/)

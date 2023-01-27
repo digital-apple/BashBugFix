@@ -18,5 +18,10 @@
 * [Address Library for SKSE](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
 	* Needed for SSE/AE
 
+## Register Visual Studio as a Generator
+* Open `x64 Native Tools Command Prompt`
+* Run `cmake`
+* Close the cmd window
+
 ## License
 [MIT](LICENSE)

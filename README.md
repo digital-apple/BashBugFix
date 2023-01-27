@@ -1,4 +1,4 @@
-# BashBugFix
+# Bash Bug Fix
 
 * [SSE/AE](https://www.nexusmods.com/skyrimspecialedition)
 

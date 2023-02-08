@@ -17,8 +17,8 @@ namespace Hooks::Patch
 				Xbyak::Label skipLabel;
 
 #ifdef SKYRIM_AE
-				const int actorState1{ 0x0C8 };
-				const int actorState2{ 0x0CC };
+				const int actorState1{ 0x0C8 }; // 0x0C0 for 1.6.353, 0x0C8 for 1.6.640
+				const int actorState2{ 0x0CC }; // 0x0C4 for 1.6.353, 0x0CC for 1.6.640
 #endif
 
 #ifdef SKYRIM_SE
@@ -103,8 +103,8 @@ namespace Hooks::Reset
 				Xbyak::Label retnLabel;
 
 #ifdef SKYRIM_AE
-				const int actorState1{ 0x0C8 };
-				const int actorState2{ 0x0CC };
+				const int actorState1{ 0x0C8 };	// 0x0C0 for 1.6.353, 0x0C8 for 1.6.640
+				const int actorState2{ 0x0CC };	// 0x0C4 for 1.6.353, 0x0CC for 1.6.640
 #endif
 
 #ifdef SKYRIM_SE

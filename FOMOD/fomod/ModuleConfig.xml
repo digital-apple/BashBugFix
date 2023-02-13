@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
+    <moduleName>Bash Bug Fix</moduleName>
+    <installSteps order="Explicit">
+        <installStep name="Main">
+            <optionalFileGroups order="Explicit">
+                <group name="DLL" type="SelectExactlyOne">
+                    <plugins order="Explicit">
+                        <plugin name="SSE v1.6.640.0 (&quot;Anniversary Edition&quot;)">
+                            <description>Select this if you are using Skyrim Anniversary Edition v1.6.640.0</description>
+                            <files>
+                                <folder source="1.6.640.0/SKSE/Plugins" destination="SKSE/Plugins" priority="0" />
+                            </files>
+                            <typeDescriptor>
+                                <dependencyType>
+                                    <defaultType name="Optional" />
+                                    <patterns>
+                                        <pattern>
+                                            <dependencies>
+                                                <gameDependency version="1.6" />
+                                            </dependencies>
+                                            <type name="Recommended" />
+                                        </pattern>
+                                        <pattern>
+                                            <dependencies>
+                                                <gameDependency version="1.5" />
+                                            </dependencies>
+                                            <type name="Optional" />
+                                        </pattern>
+                                    </patterns>
+                                </dependencyType>
+                            </typeDescriptor>
+                        </plugin>
+						<plugin name="SSE v1.6.353.0 (&quot;Anniversary Edition&quot;)">
+                            <description>Select this if you are using Skyrim Anniversary Edition v1.6.353.0</description>
+                            <files>
+                                <folder source="1.6.353.0/SKSE/Plugins" destination="SKSE/Plugins" priority="0" />
+                            </files>
+                            <typeDescriptor>
+                                <dependencyType>
+                                    <defaultType name="Optional" />
+                                    <patterns>
+                                        <pattern>
+                                            <dependencies>
+                                                <gameDependency version="1.6" />
+                                            </dependencies>
+                                            <type name="Recommended" />
+                                        </pattern>
+                                        <pattern>
+                                            <dependencies>
+                                                <gameDependency version="1.5" />
+                                            </dependencies>
+                                            <type name="Optional" />
+                                        </pattern>
+                                    </patterns>
+                                </dependencyType>
+                            </typeDescriptor>
+                        </plugin>
+                        <plugin name="SSE v1.5.97.0 (&quot;Special Edition&quot;)">
+                            <description>Select this if you are using Skyrim Special Edition v1.5.97.0</description>
+                            <files>
+                                <folder source="1.5.97.0/SKSE/Plugins" destination="SKSE/Plugins" priority="0" />
+                            </files>
+                            <typeDescriptor>
+                                <dependencyType>
+                                    <defaultType name="Optional" />
+                                    <patterns>
+                                        <pattern>
+                                            <dependencies>
+                                                <gameDependency version="1.6" />
+                                            </dependencies>
+                                            <type name="Optional" />
+                                        </pattern>
+                                        <pattern>
+                                            <dependencies>
+                                                <gameDependency version="1.5" />
+                                            </dependencies>
+                                            <type name="Recommended" />
+                                        </pattern>
+                                    </patterns>
+                                </dependencyType>
+                            </typeDescriptor>
+                        </plugin>
+                    </plugins>
+                </group>
+            </optionalFileGroups>
+        </installStep>
+    </installSteps>
+</config>

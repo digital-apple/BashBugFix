@@ -74,60 +74,6 @@ namespace Hooks::Draw
 	}
 };
 
-namespace Hooks::NextAttack
-{
-	void func() {}
-
-	void Install()
-	{
-		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(41731, 42812), OFFSET(0x6, 0x7) };
-
-		struct Patch : Xbyak::CodeGenerator
-		{
-			Patch(std::uintptr_t a_func, std::uintptr_t a_addr)
-			{
-				Xbyak::Label funcLabel;
-				Xbyak::Label skipLabel;
-				Xbyak::Label retnLabel;
-
-#ifdef SKYRIM_AE
-				const int actorState2{ 0x0CC }; // 0x0C4 for 1.6.353, 0x0CC for 1.6.640
-#endif
-
-#ifdef SKYRIM_SE
-				const int actorState2{ 0x0C4 };
-#endif
-
-				cmp(dword[rdx + actorState2], 0x1160);
-
-				jne(skipLabel);
-				mov(ecx, 6);
-				jmp(ptr[rip + retnLabel]);
-
-				L(skipLabel);
-				mov(ecx, 4);
-				jmp(ptr[rip + retnLabel]);
-
-				L(retnLabel);
-				dq(a_addr + 0x5);
-
-				L(funcLabel);
-				dq(a_func);
-			}
-		};
-
-		Patch patch(reinterpret_cast<uintptr_t>(func), target.address());
-		patch.ready();
-
-		auto& trampoline = SKSE::GetTrampoline();
-		SKSE::AllocTrampoline(64);
-
-		trampoline.write_branch<5>(target.address(), trampoline.allocate(patch));
-
-		logger::info("Hook    :    Hook \"NextAttack\" was installed.");
-	}
-}
-
 namespace Hooks::Reset
 {
 	void func(RE::Actor* a_actor)
@@ -141,7 +87,7 @@ namespace Hooks::Reset
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			while (a_actor->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash) {
 				auto value = *reinterpret_cast<uint16_t*>(address);
-				if (value != 4192 && value != 4448) {
+				if (value != 4192 && value != 4448 || a_actor->GetLifeState() == RE::ACTOR_LIFE_STATE::kBleedout) {
 					SKSE::GetTaskInterface()->AddTask([=]() {
 						a_actor->actorState1.meleeAttackState = RE::ATTACK_STATE_ENUM::kNone;
 					});
@@ -213,7 +159,6 @@ namespace Hooks
 	{
 		logger::info("Hooks    :    Installing hooks.");
 		Draw::Install();
-		NextAttack::Install();
 		Reset::Install();
 	}
 }

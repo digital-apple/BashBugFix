@@ -2,7 +2,17 @@
 
 namespace Hooks::Draw
 {
-	void func(){}
+	std::uint8_t func(RE::Actor* a_actor)
+	{
+		bool bIsBashing = false;
+		a_actor->GetGraphVariableBool("IsBashing", bIsBashing);
+
+		if (bIsBashing) {
+			return 2u;
+		}
+
+		return 1u;
+	}
 
 	void Install()
 	{
@@ -13,45 +23,36 @@ namespace Hooks::Draw
 			Patch(std::uintptr_t a_func, std::uintptr_t a_addr)
 			{
 				Xbyak::Label funcLabel;
-				Xbyak::Label skipLabel;
 				Xbyak::Label retnLabel;
 
+				push(r10);
+				push(r9);
+				push(r8);
+				push(rdi);
+				push(rsi);
+				push(rbx);
+
 #ifdef SKYRIM_AE
-				const int actorState1{ 0x0C8 }; // 0x0C0 for 1.6.353, 0x0C8 for 1.6.640
-				const int actorState2{ 0x0CC }; // 0x0C4 for 1.6.353, 0x0CC for 1.6.640
+				mov(rcx, rdi);
 #endif
 
 #ifdef SKYRIM_SE
-				const int actorState1{ 0x0C0 };
-				const int actorState2{ 0x0C4 };
-#endif
-				
-				mov(edx, ptr[rcx + 0x28]);
-			
-#ifdef SKYRIM_AE
-				cmp(dword[rdi + actorState1], 0x60000000);
+				mov(rcx, rbx);
 #endif
 
-#ifdef SKYRIM_SE
-				cmp(dword[rbx + actorState1], 0x60000000);
-#endif
-
-				jne(skipLabel);
-				mov(edx, 2);
-
-#ifdef SKYRIM_AE
-				cmp(dword[rdi + actorState2], 0x1160);
-#endif
-
-#ifdef SKYRIM_SE
-				cmp(dword[rbx + actorState2], 0x1160);
-#endif
-
-				jne(skipLabel);
-				mov(edx, 2);
-				
-				L(skipLabel);
+				sub(rsp, 0x20);
+				call(ptr[rip + funcLabel]);
+				add(rsp, 0x20);
+				mov(edx, eax);
 				shr(edx, 1);
+
+				pop(rbx);
+				pop(rsi);
+				pop(rdi);
+				pop(r8);
+				pop(r9);
+				pop(r10);
+
 				jmp(ptr[rip + retnLabel]);
 
 				L(retnLabel);
@@ -66,7 +67,7 @@ namespace Hooks::Draw
 		patch.ready();
 
 		auto& trampoline = SKSE::GetTrampoline();
-		SKSE::AllocTrampoline(75);
+		SKSE::AllocTrampoline(200);
 
 		trampoline.write_branch<5>(target.address(), trampoline.allocate(patch));
 
@@ -74,27 +75,99 @@ namespace Hooks::Draw
 	}
 };
 
+namespace Hooks::NextAttack
+{
+	std::uint8_t func(RE::Actor* a_actor)
+	{
+		bool bIsBashing = false;
+		a_actor->GetGraphVariableBool("IsBashing", bIsBashing);
+
+		if (bIsBashing) {
+			return 6u;
+		}
+
+		return 4u;
+	}
+
+	void Install()
+	{
+		REL::Relocation<std::uintptr_t> target{ RELOCATION_ID(41731, 42812), OFFSET(0x6, 0x7) };
+
+		struct Patch : Xbyak::CodeGenerator
+		{
+			Patch(std::uintptr_t a_func, std::uintptr_t a_addr)
+			{
+				Xbyak::Label funcLabel;
+				Xbyak::Label retnLabel;
+
+				push(r11);
+				push(r10);
+				push(r9);
+				push(r8);
+				push(rdx);
+
+				mov(rcx, rdx);
+				sub(rsp, 0x20);
+				call(ptr[rip + funcLabel]);
+				add(rsp, 0x20);
+				mov(ecx, eax);
+
+				pop(rdx);
+				pop(r8);
+				pop(r9);
+				pop(r10);
+				pop(r11);
+
+				jmp(ptr[rip + retnLabel]);
+
+				L(retnLabel);
+				dq(a_addr + 0x5);
+
+				L(funcLabel);
+				dq(a_func);
+			}
+		};
+
+		Patch patch(reinterpret_cast<uintptr_t>(func), target.address());
+		patch.ready();
+
+		auto& trampoline = SKSE::GetTrampoline();
+		SKSE::AllocTrampoline(200);
+
+		trampoline.write_branch<5>(target.address(), trampoline.allocate(patch));
+
+		logger::info("Hook    :    Hook \"NextAttack\" was installed.");
+	}
+}
+
 namespace Hooks::Reset
 {
 	void func(RE::Actor* a_actor)
 	{
-		a_actor->actorState1.meleeAttackState = RE::ATTACK_STATE_ENUM::kBash;
+		bool bIsBashing = false;
+		a_actor->GetGraphVariableBool("IsBashing", bIsBashing);
 
-		logger::info("Hook    :    Currently resetting attack flags for {}", a_actor->GetName());
-		const auto address = reinterpret_cast<uintptr_t>(&a_actor->actorState2);
-
-		std::jthread([=]() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			while (a_actor->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash) {
-				auto value = *reinterpret_cast<uint16_t*>(address);
-				if (value != 4192 && value != 4448 || a_actor->GetLifeState() == RE::ACTOR_LIFE_STATE::kBleedout) {
-					SKSE::GetTaskInterface()->AddTask([=]() {
-						a_actor->actorState1.meleeAttackState = RE::ATTACK_STATE_ENUM::kNone;
-					});
+		if (bIsBashing) {
+			a_actor->actorState1.meleeAttackState = RE::ATTACK_STATE_ENUM::kBash;
+			logger::info("Hook    :    Currently resetting attack flags for {}", a_actor->GetName());
+			std::jthread([=]() {
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				while (a_actor->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash) {
+					bool bIsBashing = false;
+					a_actor->GetGraphVariableBool("IsBashing", bIsBashing);
+					bool bIsAttacking = false;
+					a_actor->GetGraphVariableBool("IsAttacking", bIsAttacking);
+					if (!bIsBashing && !bIsAttacking || a_actor->GetLifeState() == RE::ACTOR_LIFE_STATE::kBleedout) {
+						SKSE::GetTaskInterface()->AddTask([=]() {
+							a_actor->actorState1.meleeAttackState = RE::ATTACK_STATE_ENUM::kNone;
+						});
+					}
 				}
-			}
-		}).detach();
-		logger::info("Hook    :    Done resetting attack flags for {}\n", a_actor->GetName());
+			}).detach();
+			logger::info("Hook    :    Done resetting attack flags for {}\n", a_actor->GetName());
+		} else {
+			a_actor->actorState1.meleeAttackState = RE::ATTACK_STATE_ENUM::kNone;
+		}
 	}
 
 	void Install()
@@ -103,49 +176,47 @@ namespace Hooks::Reset
 
 		struct Patch : Xbyak::CodeGenerator
 		{
-			Patch(std::uintptr_t a_func)
+			Patch(std::uintptr_t a_func, std::uintptr_t a_addr)
 			{
 				Xbyak::Label funcLabel;
-				Xbyak::Label skipLabel;
 				Xbyak::Label retnLabel;
 
-#ifdef SKYRIM_AE
-				const int actorState1{ 0x0C8 };	// 0x0C0 for 1.6.353, 0x0C8 for 1.6.640
-				const int actorState2{ 0x0CC };	// 0x0C4 for 1.6.353, 0x0CC for 1.6.640
-#endif
+				push(r11);
+				push(r10);
+				push(r9);
+				push(r8);
+				push(rdx);
+				push(rcx);
+				push(rax);
 
-#ifdef SKYRIM_SE
-				const int actorState1{ 0x0C0 };
-				const int actorState2{ 0x0C4 };
-#endif
-
-				cmp(dword[rbx + actorState2], 0x1160);
-				je(skipLabel);
-
-				and_(dword[rbx + actorState1], 0x0FFFFFFF);
-				jmp(retnLabel);
-
-				L(skipLabel);
-				mov(rcx, rbx);
+				mov(rcx, rdx);
+				sub(rsp, 0x28);
 				call(ptr[rip + funcLabel]);
-				jmp(retnLabel);
+				add(rsp, 0x28);
+
+				pop(rax);
+				pop(rcx);
+				pop(rdx);
+				pop(r8);
+				pop(r9);
+				pop(r10);
+				pop(r11);
+
+				jmp(ptr[rip + retnLabel]);
 
 				L(retnLabel);
-				mov(al, 1);
-				add(rsp, 0x20);
-				pop(rbx);
-				ret();
+				dq(a_addr + 0xA);
 
 				L(funcLabel);
 				dq(a_func);
 			}
 		};
 
-		Patch patch(reinterpret_cast<uintptr_t>(func));
+		Patch patch(reinterpret_cast<uintptr_t>(func), target.address());
 		patch.ready();
 
 		auto& trampoline = SKSE::GetTrampoline();
-		SKSE::AllocTrampoline(65);
+		SKSE::AllocTrampoline(200);
 
 		trampoline.write_branch<5>(target.address(), trampoline.allocate(patch));
 
@@ -159,6 +230,7 @@ namespace Hooks
 	{
 		logger::info("Hooks    :    Installing hooks.");
 		Draw::Install();
+		NextAttack::Install();
 		Reset::Install();
 	}
 }

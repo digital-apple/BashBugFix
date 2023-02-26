@@ -4,7 +4,7 @@ namespace Hooks::Draw
 {
 	std::uint8_t func(RE::Actor* a_actor)
 	{
-		bool bIsBashing = false;
+		bool bIsBashing{ false };
 		a_actor->GetGraphVariableBool("IsBashing", bIsBashing);
 
 		if (bIsBashing) {
@@ -25,11 +25,8 @@ namespace Hooks::Draw
 				Xbyak::Label funcLabel;
 				Xbyak::Label retnLabel;
 
-				push(r10);
-				push(r9);
-				push(r8);
-				push(rdi);
-				push(rsi);
+				push(rbp);
+				mov(rbp, rsp);
 				push(rbx);
 
 #ifdef SKYRIM_AE
@@ -43,15 +40,13 @@ namespace Hooks::Draw
 				sub(rsp, 0x20);
 				call(ptr[rip + funcLabel]);
 				add(rsp, 0x20);
+
 				mov(edx, eax);
 				shr(edx, 1);
 
 				pop(rbx);
-				pop(rsi);
-				pop(rdi);
-				pop(r8);
-				pop(r9);
-				pop(r10);
+				mov(rsp, rbp);
+				pop(rbp);
 
 				jmp(ptr[rip + retnLabel]);
 
@@ -67,7 +62,7 @@ namespace Hooks::Draw
 		patch.ready();
 
 		auto& trampoline = SKSE::GetTrampoline();
-		SKSE::AllocTrampoline(200);
+		SKSE::AllocTrampoline(67);
 
 		trampoline.write_branch<5>(target.address(), trampoline.allocate(patch));
 
@@ -79,7 +74,7 @@ namespace Hooks::NextAttack
 {
 	std::uint8_t func(RE::Actor* a_actor)
 	{
-		bool bIsBashing = false;
+		bool bIsBashing{ false };
 		a_actor->GetGraphVariableBool("IsBashing", bIsBashing);
 
 		if (bIsBashing) {
@@ -100,9 +95,8 @@ namespace Hooks::NextAttack
 				Xbyak::Label funcLabel;
 				Xbyak::Label retnLabel;
 
-				push(r11);
-				push(r10);
-				push(r9);
+				push(rbp);
+				mov(rbp, rsp);
 				push(r8);
 				push(rdx);
 
@@ -114,9 +108,8 @@ namespace Hooks::NextAttack
 
 				pop(rdx);
 				pop(r8);
-				pop(r9);
-				pop(r10);
-				pop(r11);
+				mov(rsp, rbp);
+				pop(rbp);
 
 				jmp(ptr[rip + retnLabel]);
 
@@ -132,7 +125,7 @@ namespace Hooks::NextAttack
 		patch.ready();
 
 		auto& trampoline = SKSE::GetTrampoline();
-		SKSE::AllocTrampoline(200);
+		SKSE::AllocTrampoline(69);
 
 		trampoline.write_branch<5>(target.address(), trampoline.allocate(patch));
 
@@ -144,19 +137,21 @@ namespace Hooks::Reset
 {
 	void func(RE::Actor* a_actor)
 	{
-		bool bIsBashing = false;
+		bool bIsBashing{ false };
 		a_actor->GetGraphVariableBool("IsBashing", bIsBashing);
 
 		if (bIsBashing) {
 			a_actor->actorState1.meleeAttackState = RE::ATTACK_STATE_ENUM::kBash;
 			logger::info("Hook    :    Currently resetting attack flags for {}", a_actor->GetName());
+
 			std::jthread([=]() {
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 				while (a_actor->GetAttackState() == RE::ATTACK_STATE_ENUM::kBash) {
-					bool bIsBashing = false;
+					bool bIsBashing{ false };
 					a_actor->GetGraphVariableBool("IsBashing", bIsBashing);
-					bool bIsAttacking = false;
+					bool bIsAttacking{ false };
 					a_actor->GetGraphVariableBool("IsAttacking", bIsAttacking);
+
 					if (!bIsBashing && !bIsAttacking || a_actor->GetLifeState() == RE::ACTOR_LIFE_STATE::kBleedout) {
 						SKSE::GetTaskInterface()->AddTask([=]() {
 							a_actor->actorState1.meleeAttackState = RE::ATTACK_STATE_ENUM::kNone;
@@ -181,26 +176,16 @@ namespace Hooks::Reset
 				Xbyak::Label funcLabel;
 				Xbyak::Label retnLabel;
 
-				push(r11);
-				push(r10);
-				push(r9);
-				push(r8);
-				push(rdx);
-				push(rcx);
-				push(rax);
+				push(rbp);
+				mov(rbp, rsp);
 
 				mov(rcx, rdx);
 				sub(rsp, 0x28);
 				call(ptr[rip + funcLabel]);
 				add(rsp, 0x28);
 
-				pop(rax);
-				pop(rcx);
-				pop(rdx);
-				pop(r8);
-				pop(r9);
-				pop(r10);
-				pop(r11);
+				mov(rsp, rbp);
+				pop(rbp);
 
 				jmp(ptr[rip + retnLabel]);
 
@@ -216,7 +201,7 @@ namespace Hooks::Reset
 		patch.ready();
 
 		auto& trampoline = SKSE::GetTrampoline();
-		SKSE::AllocTrampoline(200);
+		SKSE::AllocTrampoline(61);
 
 		trampoline.write_branch<5>(target.address(), trampoline.allocate(patch));
 
@@ -232,5 +217,6 @@ namespace Hooks
 		Draw::Install();
 		NextAttack::Install();
 		Reset::Install();
+		logger::info("");
 	}
 }
